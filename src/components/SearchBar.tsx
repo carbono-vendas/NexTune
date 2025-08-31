@@ -36,9 +36,13 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
           setShowSuggestions(true);
         } catch (error) {
           console.error('Error fetching suggestions:', error);
-          // Silently handle suggestion errors and use mock data
-          setSuggestions([]);
-          setShowSuggestions(false);
+          // Use fallback suggestions on error
+          setSuggestions([
+            { value: 'Bohemian Rhapsody', label: 'Bohemian Rhapsody - Queen' },
+            { value: 'Imagine', label: 'Imagine - John Lennon' },
+            { value: 'Hotel California', label: 'Hotel California - Eagles' }
+          ]);
+          setShowSuggestions(true);
         } finally {
           setLoadingSuggestions(false);
         }
