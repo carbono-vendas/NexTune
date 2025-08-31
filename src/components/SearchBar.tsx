@@ -79,7 +79,6 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
     const searchOptions: SearchOptions = {
       query: (searchType === 'genre' || searchType === 'category') ? selectedGenre : query,
       type: searchType,
-      setSuggestions(results || []);
     };
 
     if ((searchType === 'genre' || searchType === 'category') ? selectedGenre : query) {
