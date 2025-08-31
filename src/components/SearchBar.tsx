@@ -79,10 +79,11 @@ export function SearchBar({ onSearch, isLoading }: SearchBarProps) {
     const searchOptions: SearchOptions = {
       query: (searchType === 'genre' || searchType === 'category') ? selectedGenre : query,
       type: searchType,
-      genre: selectedGenre,
+      setSuggestions(results || []);
     };
 
     if ((searchType === 'genre' || searchType === 'category') ? selectedGenre : query) {
+      setSuggestions([]);
       onSearch(searchOptions);
       setShowSuggestions(false);
     }

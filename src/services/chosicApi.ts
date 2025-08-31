@@ -24,6 +24,20 @@ const CORS_PROXIES = [
 
 const CHOSIC_PLAYLIST_URL = 'https://www.chosic.com/playlist-generator/';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export interface MusicSuggestion {
+  id: string;
+  title: string;
+  artist: string;
+  genre?: string;
+  mood?: string;
+  bpm?: number;
+  duration?: string;
+  preview_url?: string;
+}
+
 // Track which proxy is currently working
 let workingProxyIndex = 0;
 
@@ -171,35 +185,34 @@ export function activateCorsProxy(): void {
   window.open('https://allorigins.win/', '_blank', 'noopener,noreferrer');
 }
 
-export async function getSuggestions(query: string, type: string): Promise<Suggestion[]> {
-  if (query.length < 2) return [];
-
+export async function getSuggestions(query: string): Promise<MusicSuggestion[]> {
   try {
-    // Use the playlist generator page to get suggestions by simulating the search
-    const searchUrl = `${CHOSIC_PLAYLIST_URL}?q=${encodeURIComponent(query)}&type=${type}`;
+    const apiUrl = `${SUPABASE_URL}/functions/v1/music-search`;
     
-    const response = await tryWithProxy(searchUrl);
-    const html = await response.text();
-    
-    // Parse suggestions from the HTML response
-    const suggestions = parseSuggestionsFromHtml(html, query, type);
-    
-    if (suggestions.length === 0) {
-      throw new ApiResponseFormatError('No suggestions found in response');
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, limit: 10 })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return data.suggestions || [];
     
-    return suggestions;
   } catch (error) {
     console.error('Error fetching suggestions:', error);
-    
-    // Return filtered mock data based on query
-    const suggestions = mockSuggestions[type] || [];
-    return suggestions.filter(s => 
-      s.value.toLowerCase().includes(query.toLowerCase()) ||
-      s.label.toLowerCase().includes(query.toLowerCase())
-    );
+    throw new Error(`Failed to fetch music suggestions: ${error.message}`);
   }
 }
+
+// Remove the parseChosicHTML function as it's now handled server-side
 
 export async function generatePlaylist(options: SearchOptions): Promise<Song[]> {
   try {
